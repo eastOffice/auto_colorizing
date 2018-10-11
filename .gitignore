@@ -1,3 +1,5 @@
 outputs
 images
 testSet_resize
+__pycache__
+.vscode
