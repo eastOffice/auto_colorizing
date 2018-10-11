@@ -163,15 +163,27 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=0.0)
 # Training
 train_transforms = transforms.Compose([transforms.RandomResizedCrop(224), transforms.RandomHorizontalFlip()])
 train_imagefolder = GrayscaleImageFolder('images/train', train_transforms)
-train_loader = torch.utils.data.DataLoader(train_imagefolder, batch_size=64, shuffle=True)
+train_loader = torch.utils.data.DataLoader(train_imagefolder, batch_size=64, shuffle=True, num_workers=8)
 
 # Validation
 val_transforms = transforms.Compose([transforms.Resize(256), transforms.CenterCrop(224)])
 val_imagefolder = GrayscaleImageFolder('images/val', val_transforms)
-val_loader = torch.utils.data.DataLoader(val_imagefolder, batch_size=64, shuffle=False)
+val_loader = torch.utils.data.DataLoader(val_imagefolder, batch_size=64, shuffle=False, num_workers=8)
+
+### Loading checkpoints
+start_epoch = 0
+if os.path.isfile('checkpoints/model_best.pth.tar'):
+    print('Loading checkpoint...')
+    checkpoint = torch.load('checkpoints/model_best.pth.tar')
+    start_epoch = checkpoint['epoch']
+    best_losses = checkpoint['best_losses']
+    model.load_state_dict(checkpoint['state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+    print('Finished loading checkpoint. Resuming from epoch {}'.format(checkpoint['epoch']))
+
 
 ### Train model
-for epoch in range(epochs):
+for epoch in range(start_epoch, epochs):
     # Train for one epoch, then validate
     train(train_loader, model, criterion, optimizer, epoch)
     save_images = True
